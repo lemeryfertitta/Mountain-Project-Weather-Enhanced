@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Mountain Project Stats Enhanced Icon - All Bars Fully Contained -->
+
+<svg
+   width="128"
+   height="128"
+   viewBox="0 0 128 128"
+   fill="none"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="icon.svg"
+   inkscape:version="1.4.2 (ebf0e940, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs5" />
+  <sodipodi:namedview
+     id="namedview5"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="2.2722927"
+     inkscape:cx="80.315357"
+     inkscape:cy="99.899102"
+     inkscape:window-width="1512"
+     inkscape:window-height="837"
+     inkscape:window-x="0"
+     inkscape:window-y="38"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg5"
+     showgrid="false" />
+  <!-- Background: Mountain Project blue -->
+  <!-- Centered mountain silhouette: white fill, shifted up and left -->
+  <polygon
+     points="32,96 60,44 74,70 88,52 104,96 "
+     fill="#ffffff"
+     stroke="#333333"
+     stroke-width="3"
+     id="polygon1"
+     transform="matrix(1.5326342,0,0,1.803789,-40.961581,-62.637878)"
+     style="fill:#336799;fill-opacity:1" />
+  <!-- Partially cloudy symbol: sun and cloud inside mountain, moved down and left -->
+  <!-- Sun (yellow circle, partially behind cloud) -->
+  <circle
+     cx="56.640507"
+     cy="81.838821"
+     r="14"
+     fill="#ffe066"
+     opacity="0.9"
+     id="circle1" />
+  <!-- Cloud (white, overlapping sun) -->
+  <ellipse
+     cx="67.960754"
+     cy="89.198318"
+     rx="16"
+     ry="10"
+     fill="#ffffff"
+     opacity="0.95"
+     id="ellipse1" />
+  <ellipse
+     cx="80.840919"
+     cy="84.797478"
+     rx="8"
+     ry="7"
+     fill="#f0f0f0"
+     opacity="0.95"
+     id="ellipse2" />
+  <ellipse
+     cx="60.200424"
+     cy="96.958656"
+     rx="10"
+     ry="7"
+     fill="#e0e0e0"
+     opacity="0.95"
+     id="ellipse3" />
+</svg>
