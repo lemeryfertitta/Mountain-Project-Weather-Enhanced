@@ -15,7 +15,7 @@
       "world": "MAIN",
       "js": ["dist/script.js"],
       "matches": ["https://www.mountainproject.com/area/*"],
-      "run_at": "document_start"
+      "run_at": "document_idle"
     }
   ],
   "permissions": []
