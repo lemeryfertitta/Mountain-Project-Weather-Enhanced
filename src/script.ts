@@ -93,19 +93,24 @@ async function renderForecastFromApi(
     const iconName =
       weatherIconMap[mostCommonCode] || "meteocons:clear-day-fill";
     const max = Math.round(weather.daily.temperature_2m_max[daysFromToday]!);
-    // Select the card button from HTML
-    const dayDiv = document.getElementById(
-      `day-card-${daysFromToday}`
+    const dayButton = document.getElementById(
+      `day-button-${daysFromToday}`
     ) as HTMLButtonElement | null;
-    if (!dayDiv) continue;
-    dayDiv.innerHTML = "";
-    dayDiv.onclick = null;
+    if (!dayButton) continue;
 
     const nameDiv = document.createElement("div");
-    nameDiv.textContent = day.toLocaleDateString(undefined, {
+    const dayName = day.toLocaleDateString(undefined, {
       weekday: "short",
       timeZone: timeZone ?? undefined,
     });
+    const toggleIconSpan = document.createElement("span");
+    toggleIconSpan.id = `day-toggle-${daysFromToday}`;
+    toggleIconSpan.textContent = "⏵ ";
+
+    const dayNameSpan = document.createElement("span");
+    dayNameSpan.textContent = dayName;
+    nameDiv.appendChild(toggleIconSpan);
+    nameDiv.appendChild(dayNameSpan);
 
     const iconElement = document.createElement("img");
     iconElement.src = iconName;
@@ -114,12 +119,31 @@ async function renderForecastFromApi(
     const tempDiv = document.createElement("div");
     tempDiv.textContent = `${max}°${tempUnitSymbol}`;
 
-    dayDiv.appendChild(nameDiv);
-    dayDiv.appendChild(iconElement);
-    dayDiv.appendChild(tempDiv);
+    dayButton.appendChild(nameDiv);
+    dayButton.appendChild(iconElement);
+    dayButton.appendChild(tempDiv);
 
-    // Vanilla JS collapse logic for hourly forecast
-    dayDiv.onclick = () => {
+    dayButton.onclick = () => {
+      const hourlyForecast = document.getElementById("hourly-forecast");
+      if (!hourlyForecast) {
+        console.error("MPWE: Hourly forecast element not found");
+        return;
+      }
+      const prevDisplayedDayIndex = hourlyForecast.getAttribute("data-displayed-day-index");
+      const prevDisplayedDayToggle = document.getElementById(`day-toggle-${prevDisplayedDayIndex}`);
+      if (prevDisplayedDayToggle) {
+        prevDisplayedDayToggle.textContent = "⏵ ";
+      }
+      if (prevDisplayedDayIndex === daysFromToday.toString()) {
+        hourlyForecast.style.display = "none";
+        hourlyForecast.setAttribute("data-displayed-day-index", "-1");
+        return;
+      } else {
+        const dayToggle = document.getElementById(`day-toggle-${daysFromToday}`);
+        if (dayToggle) {
+          dayToggle.textContent = "⏷ ";
+        }
+      }
       const formattedDate = day.toLocaleDateString(undefined, {
         weekday: "long",
         month: "short",
@@ -128,7 +152,7 @@ async function renderForecastFromApi(
       });
       const collapseTitle = document.getElementById("collapse-title");
       if (collapseTitle) {
-        collapseTitle.textContent = formattedDate;
+        collapseTitle.textContent = `Hourly forecast for ${formattedDate}`;
       }
       const hourlyTableBody = document.getElementById(
         "hourly-list"
@@ -142,9 +166,8 @@ async function renderForecastFromApi(
         const hourDate = weather.hourly.time[h];
         if (
           !hourDate ||
-          hourDate.getFullYear() !== day.getFullYear() ||
-          hourDate.getMonth() !== day.getMonth() ||
-          hourDate.getDate() !== day.getDate()
+          hourDate.toLocaleDateString(undefined, { timeZone: timeZone ?? undefined }) !==
+          day.toLocaleDateString(undefined, { timeZone: timeZone ?? undefined })
         ) {
           continue;
         }
@@ -259,10 +282,8 @@ async function renderForecastFromApi(
 
         hourlyTableBody.appendChild(tr);
       }
-      const collapseEl = document.getElementById("hourlyCollapse");
-      if (collapseEl) {
-        collapseEl.style.display = "block";
-      }
+      hourlyForecast.style.display = "block";
+      hourlyForecast.setAttribute("data-displayed-day-index", daysFromToday.toString());
       if (sunriseRowToFocus) {
         const hourlyDiv = document.getElementById("hourly-div");
         if (hourlyDiv) {
@@ -275,9 +296,8 @@ async function renderForecastFromApi(
 function createWidgetContainer(): HTMLElement {
   const container = document.createElement("div");
   container.id = "mp-weather-enhanced-widget";
-  container.classList.add("m-1");
+  container.classList.add("mt-1", "inline-block");
 
-  // Forecast grid
   const dailyTable = document.createElement("table");
   dailyTable.id = "forecast-days-table";
   const dailyTbody = document.createElement("tbody");
@@ -285,8 +305,9 @@ function createWidgetContainer(): HTMLElement {
   for (let i = 0; i < 7; i++) {
     const td = document.createElement("td");
     const btn = document.createElement("button");
-    btn.id = `day-card-${i}`;
-    btn.classList.add("btn", "btn-primary", "btn-sm");
+    btn.id = `day-button-${i}`;
+    btn.classList.add("btn", "btn-primary", "btn-xs");
+    btn.style.whiteSpace = "nowrap";
     btn.type = "button";
     td.appendChild(btn);
     row.appendChild(td);
@@ -295,17 +316,17 @@ function createWidgetContainer(): HTMLElement {
   dailyTable.appendChild(dailyTbody);
   container.appendChild(dailyTable);
 
-  // Vanilla collapse for hourly forecast
   const collapse = document.createElement("div");
-  collapse.id = "hourlyCollapse";
+  collapse.id = "hourly-forecast";
   collapse.style.display = "none";
-  // Create collapse content using JS instead of innerHTML
+  collapse.classList.add("mt-1");
+  collapse.setAttribute("data-displayed-day-index", "-1");
   const collapseTitle = document.createElement("h3");
   collapseTitle.id = "collapse-title";
 
   const hourlyDiv = document.createElement("div");
   hourlyDiv.id = "hourly-div";
-  hourlyDiv.style.maxHeight = "200px";
+  hourlyDiv.style.maxHeight = "300px";
   hourlyDiv.style.overflowX = "hidden";
   hourlyDiv.style.overflowY = "scroll";
 

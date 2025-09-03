@@ -49,7 +49,7 @@ export async function getWeatherData(
       ].map(
         (_, i) =>
           new Date(
-            (Number(hourly.time()) + i * hourly.interval() + utcOffsetSeconds) *
+            (Number(hourly.time()) + i * hourly.interval()) *
               1000
           )
       ),
@@ -72,7 +72,7 @@ export async function getWeatherData(
       ].map(
         (_, i) =>
           new Date(
-            (Number(daily.time()) + i * daily.interval() + utcOffsetSeconds) *
+            (Number(daily.time()) + i * daily.interval()) *
               1000
           )
       ),
@@ -80,13 +80,13 @@ export async function getWeatherData(
         ? [...Array(sunrise.valuesInt64Length())].map(
             (_, i) =>
               new Date(
-                (Number(sunrise.valuesInt64(i)) + utcOffsetSeconds) * 1000
+                (Number(sunrise.valuesInt64(i))) * 1000
               )
           )
         : [],
       sunset: [...Array(sunset.valuesInt64Length())].map(
         (_, i) =>
-          new Date((Number(sunset.valuesInt64(i)) + utcOffsetSeconds) * 1000)
+          new Date((Number(sunset.valuesInt64(i))) * 1000)
       ),
       weather_code: daily.variables(2)?.valuesArray() ?? [],
       temperature_2m_max: daily.variables(3)?.valuesArray() ?? [],
