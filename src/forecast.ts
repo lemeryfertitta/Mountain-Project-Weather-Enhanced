@@ -30,16 +30,6 @@ export async function getWeatherData(
   const daily = response.daily()!;
   const sunrise = daily.variables(0)!;
   const sunset = daily.variables(1)!;
-  const timezone = response.timezone();
-  const timezoneAbbreviation = response.timezoneAbbreviation();
-  const utcOffsetSeconds = response.utcOffsetSeconds();
-
-  console.log(
-    `\nCoordinates: ${latitude}°N ${longitude}°E`,
-    `\nTimezone: ${timezone} ${timezoneAbbreviation}`,
-    `\nTimezone difference to GMT+0: ${utcOffsetSeconds}s`
-  );
-
   return {
     hourly: {
       time: [
@@ -98,27 +88,28 @@ export async function getWeatherData(
 export function getMostCommonWeatherCodeForDay(
   time: Date[],
   weathercodes: Float32Array | never[],
-  day: Date
+  sunrise?: Date,
+  sunset?: Date
 ): number {
-  // Filter weather codes for the given day
-  const codesForDay: number[] = [];
+  const codesForDaylight: number[] = [];
+  let dayStart: Date | undefined = sunrise;
+  let dayEnd: Date | undefined = sunset;
   for (let i = 0; i < time.length; i++) {
     const t = time[i]!;
     if (
-      t.getFullYear() === day.getFullYear() &&
-      t.getMonth() === day.getMonth() &&
-      t.getDate() === day.getDate()
+      dayStart && dayEnd &&
+      t >= dayStart && t <= dayEnd
     ) {
-      codesForDay.push(weathercodes[i]!);
+      codesForDaylight.push(weathercodes[i]!);
     }
   }
   // Count occurrences
   const freq: Record<number, number> = {};
-  for (const code of codesForDay) {
+  for (const code of codesForDaylight) {
     freq[code] = (freq[code] || 0) + 1;
   }
   // Find most common code
-  let mostCommon = codesForDay[0] ?? 0;
+  let mostCommon = codesForDaylight[0] ?? 0;
   let maxCount = 0;
   for (const code in freq) {
     if (freq[code]! > maxCount) {

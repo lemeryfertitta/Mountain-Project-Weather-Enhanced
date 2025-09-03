@@ -1,77 +1,11 @@
-// ...existing imports...
-/** Weather icons from https://github.com/basmilius/weather-icons */
-import clearDay from "./weather_icons/clear-day.svg";
-import sunriseIconUrl from "./weather_icons/sunrise.svg";
-import sunsetIconUrl from "./weather_icons/sunset.svg";
-import clearNight from "./weather_icons/clear-night.svg";
-import drizzle from "./weather_icons/drizzle.svg";
-import extremeRain from "./weather_icons/extreme-rain.svg";
-import extremeSnow from "./weather_icons/extreme-snow.svg";
-import fog from "./weather_icons/fog.svg";
-import overcast from "./weather_icons/overcast.svg";
-import partlyCloudyDay from "./weather_icons/partly-cloudy-day.svg";
-import partlyCloudyNight from "./weather_icons/partly-cloudy-night.svg";
-import rain from "./weather_icons/rain.svg";
-import snow from "./weather_icons/snow.svg";
-import thunderstorms from "./weather_icons/thunderstorms.svg";
-import thunderstormsExtreme from "./weather_icons/thunderstorms-extreme.svg";
-
 import { getWeatherData, getMostCommonWeatherCodeForDay } from "./forecast.js";
+import {
+  getSunriseIcon,
+  getSunsetIcon,
+  getWeatherIcon,
+} from "./weather-icon-map.js";
 
 const daysToForecast = 7;
-
-const weatherIconMap: Record<number, string> = {
-  0: clearDay,
-  1: partlyCloudyDay,
-  2: partlyCloudyDay,
-  3: overcast,
-  45: fog,
-  48: fog,
-  51: drizzle,
-  53: drizzle,
-  55: drizzle,
-  61: rain,
-  63: rain,
-  65: extremeRain,
-  71: snow,
-  73: snow,
-  75: extremeSnow,
-  77: snow,
-  80: rain,
-  81: rain,
-  82: extremeRain,
-  85: snow,
-  86: extremeSnow,
-  95: thunderstorms,
-  96: thunderstormsExtreme,
-  99: thunderstormsExtreme,
-};
-const weatherIconMapNight: Record<number, string> = {
-  0: clearNight,
-  1: partlyCloudyNight,
-  2: partlyCloudyNight,
-  3: overcast,
-  45: fog,
-  48: fog,
-  51: drizzle,
-  53: drizzle,
-  55: drizzle,
-  61: rain,
-  63: rain,
-  65: extremeRain,
-  71: snow,
-  73: snow,
-  75: extremeSnow,
-  77: snow,
-  80: rain,
-  81: rain,
-  82: extremeRain,
-  85: snow,
-  86: extremeSnow,
-  95: thunderstorms,
-  96: thunderstormsExtreme,
-  99: thunderstormsExtreme,
-};
 
 async function renderForecastFromApi(
   latitude: number,
@@ -88,10 +22,10 @@ async function renderForecastFromApi(
     const mostCommonCode = getMostCommonWeatherCodeForDay(
       weather.hourly.time,
       weather.hourly.weather_code,
-      day
+      weather.daily.sunrise[daysFromToday],
+      weather.daily.sunset[daysFromToday]
     );
-    const iconName =
-      weatherIconMap[mostCommonCode] || "meteocons:clear-day-fill";
+    const iconName = getWeatherIcon(mostCommonCode, false);
     const max = Math.round(weather.daily.temperature_2m_max[daysFromToday]!);
     const dayButton = document.getElementById(
       `day-button-${daysFromToday}`
@@ -115,6 +49,8 @@ async function renderForecastFromApi(
     const iconElement = document.createElement("img");
     iconElement.src = iconName;
     iconElement.alt = "Weather icon";
+    iconElement.height = 36;
+    iconElement.width = 36;
 
     const tempDiv = document.createElement("div");
     tempDiv.textContent = `${max}°${tempUnitSymbol}`;
@@ -126,11 +62,14 @@ async function renderForecastFromApi(
     dayButton.onclick = () => {
       const hourlyForecast = document.getElementById("hourly-forecast");
       if (!hourlyForecast) {
-        console.error("MPWE: Hourly forecast element not found");
-        return;
+        throw new Error("MPWE: Hourly forecast element not found");
       }
-      const prevDisplayedDayIndex = hourlyForecast.getAttribute("data-displayed-day-index");
-      const prevDisplayedDayToggle = document.getElementById(`day-toggle-${prevDisplayedDayIndex}`);
+      const prevDisplayedDayIndex = hourlyForecast.getAttribute(
+        "data-displayed-day-index"
+      );
+      const prevDisplayedDayToggle = document.getElementById(
+        `day-toggle-${prevDisplayedDayIndex}`
+      );
       if (prevDisplayedDayToggle) {
         prevDisplayedDayToggle.textContent = "⏵ ";
       }
@@ -139,7 +78,9 @@ async function renderForecastFromApi(
         hourlyForecast.setAttribute("data-displayed-day-index", "-1");
         return;
       } else {
-        const dayToggle = document.getElementById(`day-toggle-${daysFromToday}`);
+        const dayToggle = document.getElementById(
+          `day-toggle-${daysFromToday}`
+        );
         if (dayToggle) {
           dayToggle.textContent = "⏷ ";
         }
@@ -166,8 +107,12 @@ async function renderForecastFromApi(
         const hourDate = weather.hourly.time[h];
         if (
           !hourDate ||
-          hourDate.toLocaleDateString(undefined, { timeZone: timeZone ?? undefined }) !==
-          day.toLocaleDateString(undefined, { timeZone: timeZone ?? undefined })
+          hourDate.toLocaleDateString(undefined, {
+            timeZone: timeZone ?? undefined,
+          }) !==
+            day.toLocaleDateString(undefined, {
+              timeZone: timeZone ?? undefined,
+            })
         ) {
           continue;
         }
@@ -182,22 +127,17 @@ async function renderForecastFromApi(
         if (sunrise instanceof Date && sunset instanceof Date) {
           isNight = hourDate < sunrise || hourDate >= sunset;
         }
-        const iconNameHourly = isNight
-          ? weatherIconMapNight[code]
-          : weatherIconMap[code];
-        const fallbackIcon = clearDay;
+        const iconNameHourly = getWeatherIcon(code, isNight);
         const precip = weather.hourly.precipitation_probability?.[h] ?? null;
         const humidity = weather.hourly.relative_humidity_2m?.[h] ?? null;
         const wind_speed = weather.hourly.wind_speed?.[h];
         const wind_direction = weather.hourly.wind_direction?.[h] ?? null;
 
-        // Create table row and cells
         const tr = document.createElement("tr");
 
         const tdHour = document.createElement("td");
         tdHour.textContent = hourStr;
 
-        // Add sunrise/sunset time below hour if it matches
         if (
           sunrise instanceof Date &&
           hourDate.getHours() === sunrise.getHours()
@@ -211,7 +151,7 @@ async function renderForecastFromApi(
               timeZone: timeZone ?? undefined,
             }) + " ";
           const sunriseImg = document.createElement("img");
-          sunriseImg.src = sunriseIconUrl;
+          sunriseImg.src = getSunriseIcon();
           sunriseImg.alt = "Sunrise";
           sunriseImg.width = 18;
           sunriseImg.height = 18;
@@ -234,7 +174,7 @@ async function renderForecastFromApi(
               timeZone: timeZone ?? undefined,
             }) + " ";
           const sunsetImg = document.createElement("img");
-          sunsetImg.src = sunsetIconUrl;
+          sunsetImg.src = getSunsetIcon();
           sunsetImg.alt = "Sunset";
           sunsetImg.width = 18;
           sunsetImg.height = 18;
@@ -247,7 +187,7 @@ async function renderForecastFromApi(
 
         const tdIcon = document.createElement("td");
         const iconEl = document.createElement("img");
-        iconEl.src = iconNameHourly || fallbackIcon;
+        iconEl.src = iconNameHourly;
         iconEl.width = 36;
         iconEl.height = 36;
         iconEl.alt = "Weather icon";
@@ -260,21 +200,35 @@ async function renderForecastFromApi(
 
         const tdPrecip = document.createElement("td");
         tdPrecip.title = "Precipitation Probability";
-        tdPrecip.innerHTML = precip !== null ? `<span>${precip}%</span>` : "-";
+        if (precip !== null) {
+          const spanPrecip = document.createElement("span");
+          spanPrecip.textContent = `${precip}%`;
+          tdPrecip.appendChild(spanPrecip);
+        } else {
+          tdPrecip.textContent = "-";
+        }
         tr.appendChild(tdPrecip);
 
         const tdHumidity = document.createElement("td");
         tdHumidity.title = "Humidity";
-        tdHumidity.innerHTML =
-          humidity !== null ? `<span>${humidity}%</span>` : "-";
+        if (humidity !== null) {
+          const spanHumidity = document.createElement("span");
+          spanHumidity.textContent = `${humidity}%`;
+          tdHumidity.appendChild(spanHumidity);
+        } else {
+          tdHumidity.textContent = "-";
+        }
         tr.appendChild(tdHumidity);
 
         const tdWind = document.createElement("td");
         tdWind.title = "Wind";
         if (wind_speed !== null) {
-          tdWind.innerHTML = `<span'>${wind_speed} ${windSpeedUnitSymbol} ${wind_direction}</span>`;
-        } else if (wind_speed !== null) {
-          tdWind.innerHTML = `<span>${wind_speed} ${windSpeedUnitSymbol}</span>`;
+          const spanWind = document.createElement("span");
+          spanWind.textContent = `${wind_speed} ${windSpeedUnitSymbol}`;
+          if (wind_direction) {
+            spanWind.textContent += ` ${wind_direction}`;
+          }
+          tdWind.appendChild(spanWind);
         } else {
           tdWind.textContent = "-";
         }
@@ -283,7 +237,10 @@ async function renderForecastFromApi(
         hourlyTableBody.appendChild(tr);
       }
       hourlyForecast.style.display = "block";
-      hourlyForecast.setAttribute("data-displayed-day-index", daysFromToday.toString());
+      hourlyForecast.setAttribute(
+        "data-displayed-day-index",
+        daysFromToday.toString()
+      );
       if (sunriseRowToFocus) {
         const hourlyDiv = document.getElementById("hourly-div");
         if (hourlyDiv) {
@@ -373,26 +330,47 @@ function injectWeatherWidget(
   } else {
     document.body.prepend(widget);
   }
-  renderForecastFromApi(latitude, longitude, "imperial");
+  const units = getUnits();
+  renderForecastFromApi(latitude, longitude, units);
 }
 
-const weatherDiv = document.getElementById("weather");
-const gpsTd = document.evaluate(
-  "//td[contains(text(),'GPS:')]",
-  document,
-  null,
-  XPathResult.FIRST_ORDERED_NODE_TYPE,
-  null
-).singleNodeValue;
-const gps = gpsTd?.nextSibling?.nextSibling?.textContent;
-const [latitude, longitude] =
-  gps?.split(",").map((coord) => parseFloat(coord.trim())) || [];
-if (
-  weatherDiv &&
-  typeof latitude === "number" &&
-  !isNaN(latitude) &&
-  typeof longitude === "number" &&
-  !isNaN(longitude)
-) {
-  injectWeatherWidget(weatherDiv, latitude, longitude);
+function getUnits() {
+  const imperial = document.getElementsByClassName("imperial");
+  const imperialElement = imperial[0] as HTMLElement | undefined;
+  if (
+    imperialElement &&
+    window.getComputedStyle(imperialElement, null).display === "none"
+  ) {
+    return "metric";
+  }
+  return "imperial";
 }
+
+function getCoordinates(): [number, number] {
+  const gpsTd = document.evaluate(
+    "//td[contains(text(),'GPS:')]",
+    document,
+    null,
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null
+  ).singleNodeValue;
+  const gps = gpsTd?.nextSibling?.nextSibling?.textContent;
+  const [latitude, longitude] =
+    gps?.split(",").map((coord) => parseFloat(coord.trim())) || [];
+  if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
+    throw new Error("MPWE: Unable to parse GPS coordinates");
+  }
+  return [latitude, longitude];
+}
+
+function getWeatherDiv(): HTMLElement {
+  const weatherDiv = document.getElementById("weather");
+  if (!weatherDiv) {
+    throw new Error("MPWE: Weather div not found");
+  }
+  return weatherDiv;
+}
+
+const weatherDiv = getWeatherDiv();
+const [latitude, longitude] = getCoordinates();
+injectWeatherWidget(weatherDiv, latitude, longitude);
