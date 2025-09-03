@@ -15,4 +15,13 @@ All animated weather icons are from https://github.com/basmilius/weather-icons/.
 
 ## Installation
 
-Add the extension to your Chrome browser from the [extension page](TODO) or by cloning/downloading this repository and [adding it manually](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked).
+For general usage, the easiest way to add the extension to your Chrome browser is from the [extension page](TODO).
+
+For local development and testing, clone the repository and run:
+
+```
+npm install
+npx vite build
+```
+
+After the project is built, [add it manually](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked) to Chrome.
