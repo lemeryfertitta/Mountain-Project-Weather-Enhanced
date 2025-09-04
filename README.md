@@ -14,7 +14,7 @@ All animated weather icons are from https://github.com/basmilius/weather-icons/.
 
 ## Installation
 
-For general usage, the easiest way to add the extension to your Chrome browser is from the [extension page](TODO).
+For general usage, the easiest way to add the extension to your Chrome browser is from the [extension page](https://chromewebstore.google.com/detail/jjcnagbiidbmijfogifohnaaamemdblm?utm_source=item-share-cb).
 
 For local development and testing, clone the repository and run:
 
